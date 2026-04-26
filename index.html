@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<title>千字表 · 灵动汉字 · DeepSeek智能研习</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&family=Inter:opsz@14..32&display=swap');
+
+  :root {
+    --ink: #1a1008;
+    --paper: #f5efe0;
+    --paper-dark: #e8dcc8;
+    --red: #c0392b;
+    --red-glow: rgba(192,57,43,0.12);
+    --gold: #a0832a;
+    --border: #c9b88a;
+    --shadow: rgba(60,30,10,0.18);
+    --gray-mid: #7a6a50;
+    --cream-light: #fefaf0;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--paper);
+    background-image:
+      repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(180,160,110,0.12) 39px, rgba(180,160,110,0.12) 40px),
+      repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(180,160,110,0.08) 39px, rgba(180,160,110,0.08) 40px);
+    font-family: 'Noto Serif SC', 'STSong', 'SimSun', 'Inter', serif;
+    color: var(--ink);
+    min-height: 100vh;
+    padding-bottom: 60px;
+  }
+
+  header {
+    text-align: center;
+    padding: 28px 20px 20px;
+    border-bottom: 2px solid var(--border);
+    background: linear-gradient(to bottom, #ede3c8, var(--paper));
+    position: relative;
+  }
+
+  header::before, header::after {
+    content: '❧';
+    color: var(--gold);
+    font-size: 1.3rem;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+  header::before { left: 25px; }
+  header::after { right: 25px; transform: translateY(-50%) scaleX(-1); }
+
+  header h1 {
+    font-size: 1.9rem;
+    font-weight: 700;
+    letter-spacing: 0.3em;
+    color: var(--ink);
+    text-shadow: 1px 2px 0 rgba(160,130,60,0.25);
+    margin-right: -0.3em;
+  }
+
+  header p {
+    font-size: 0.75rem;
+    color: #7a6a50;
+    margin-top: 6px;
+    letter-spacing: 0.15em;
+  }
+
+  .settings-gear {
+    position: absolute;
+    top: 20px;
+    right: 24px;
+    cursor: pointer;
+    font-size: 1.9rem;
+    background: none;
+    border: none;
+    color: var(--gold);
+    transition: transform 0.2s ease, color 0.2s;
+    z-index: 120;
+    background: rgba(245, 239, 224, 0.6);
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(4px);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+  }
+  .settings-gear:hover {
+    transform: rotate(25deg);
+    color: var(--red);
+    background: rgba(245, 239, 224, 0.95);
+  }
+
+  .modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(30, 20, 10, 0.6);
+    backdrop-filter: blur(5px);
+    z-index: 2000;
+    justify-content: center;
+    align-items: center;
+  }
+  .modal.active {
+    display: flex;
+  }
+  .modal-card {
+    background: var(--cream-light);
+    border-radius: 32px;
+    max-width: 460px;
+    width: 90%;
+    padding: 28px 24px 32px;
+    border: 1px solid var(--border);
+    box-shadow: 0 20px 35px rgba(0,0,0,0.2);
+    text-align: center;
+  }
+  .modal-card h3 {
+    font-size: 1.6rem;
+    color: var(--ink);
+    margin-bottom: 8px;
+  }
+  .modal-card p {
+    color: var(--gray-mid);
+    font-size: 0.85rem;
+    margin-bottom: 20px;
+  }
+  .api-input {
+    width: 100%;
+    padding: 12px 16px;
+    font-family: monospace;
+    border: 1px solid var(--border);
+    border-radius: 48px;
+    background: white;
+    font-size: 0.9rem;
+    margin-bottom: 20px;
+    outline: none;
+    transition: 0.2s;
+  }
+  .api-input:focus {
+    border-color: var(--gold);
+    box-shadow: 0 0 0 2px rgba(160,131,42,0.2);
+  }
+  .modal-buttons {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+  }
+  .btn-save, .btn-cancel {
+    border: none;
+    padding: 8px 24px;
+    border-radius: 40px;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s;
+  }
+  .btn-save {
+    background: var(--gold);
+    color: white;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
+  .btn-save:hover {
+    background: #8b6e2c;
+    transform: scale(0.97);
+  }
+  .btn-cancel {
+    background: #e2d4bc;
+    color: #4a3e28;
+  }
+  .key-status {
+    font-size: 0.7rem;
+    margin-top: 12px;
+    color: var(--red);
+  }
+
+  .grid-wrapper {
+    max-width: 1100px;
+    margin: 30px auto;
+    padding: 0 20px;
+  }
+
+  #char-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(46px, 1fr));
+    gap: 4px;
+  }
+
+  .char-cell {
+    width: 100%;
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    cursor: pointer;
+    border: 1px solid transparent;
+    border-radius: 3px;
+    transition: all 0.18s ease;
+    position: relative;
+    user-select: none;
+    background: transparent;
+    color: var(--ink);
+  }
+
+  .char-cell:hover {
+    background: rgba(160,131,42,0.08);
+    border-color: var(--border);
+    color: var(--gold);
+    transform: scale(1.1);
+    z-index: 2;
+  }
+
+  .char-cell.active {
+    color: var(--red);
+    background: var(--red-glow);
+    border-color: rgba(192,57,43,0.45);
+    font-weight: 700;
+    transform: scale(1.15);
+    z-index: 10;
+    box-shadow: 0 2px 12px rgba(192,57,43,0.25);
+  }
+
+  /* =========== 修复：弹窗居中样式 =========== */
+  #popup {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1000;
+    background: var(--cream-light);
+    border: 1px solid var(--border);
+    border-radius: 28px;
+    padding: 24px 16px 20px;
+    box-shadow: 0 20px 40px var(--shadow), 0 1px 4px rgba(255,245,215,0.8) inset;
+    width: 420px;
+    max-width: 90vw;
+    max-height: 85vh; /* 防止内容超出屏幕高度 */
+    pointer-events: auto;
+  }
+
+  #popup.visible {
+    display: flex;
+    flex-direction: column;
+    animation: fadeInUp 0.26s cubic-bezier(0.2, 0.9, 0.4, 1.1) forwards;
+  }
+
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translate(-50%, -45%) scale(0.96); }
+    to   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  }
+
+  #popup-char {
+    font-size: 3.2rem;
+    color: var(--red);
+    text-align: center;
+    line-height: 1;
+    margin-bottom: 4px;
+    text-shadow: 2px 3px 0 rgba(192,57,43,0.15);
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  .popup-sub {
+    text-align: center;
+    font-size: 0.68rem;
+    color: #9a8a6a;
+    letter-spacing: 0.1em;
+    margin-bottom: 14px;
+    border-bottom: 1px dashed var(--border);
+    display: inline-block;
+    width: auto;
+    padding: 0 8px 6px;
+  }
+
+  .words-scroll-area {
+    overflow-y: auto;
+    padding-right: 6px;
+    scrollbar-width: thin;
+    flex-shrink: 1; /* 保证高度受限时内部出现滚动条 */
+  }
+  .words-scroll-area::-webkit-scrollbar {
+    width: 4px;
+    background: #e2d4bc;
+    border-radius: 4px;
+  }
+  .words-scroll-area::-webkit-scrollbar-thumb {
+    background: var(--gold);
+    border-radius: 4px;
+  }
+
+  .word-card {
+    background: #fffcf3;
+    border-left: 4px solid var(--gold);
+    border-radius: 16px;
+    padding: 12px 14px;
+    margin-bottom: 14px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+
+  .word-header {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .word-text {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #2b2a26;
+    letter-spacing: 0.02em;
+  }
+  .word-text .highlight {
+    color: var(--red);
+    font-weight: 800;
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 4px;
+  }
+  .word-meaning {
+    font-size: 0.72rem;
+    background: #ede3cc;
+    padding: 2px 12px;
+    border-radius: 24px;
+    color: #5e4b2b;
+    font-family: 'Inter', monospace;
+    font-weight: 500;
+  }
+
+  .example-section {
+    margin-top: 8px;
+    font-size: 0.82rem;
+    line-height: 1.45;
+  }
+  .example-cn {
+    color: #3a2e1f;
+    background: #faf1e0;
+    padding: 6px 12px;
+    border-radius: 16px;
+    margin-bottom: 6px;
+    border-left: 2px solid var(--border);
+  }
+  .example-en {
+    color: #6d5c3e;
+    font-size: 0.71rem;
+    font-family: 'Inter', monospace;
+    padding-left: 12px;
+    border-left: 2px dotted #cfc29e;
+    margin-top: 4px;
+  }
+
+  #popup-loading {
+    text-align: center;
+    padding: 40px 12px;
+    color: #9a8a6a;
+    font-size: 0.9rem;
+  }
+  .spinner {
+    display: inline-block;
+    width: 24px;
+    height: 24px;
+    border: 2px solid var(--border);
+    border-top-color: var(--red);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    vertical-align: middle;
+    margin-right: 10px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .error-placeholder {
+    text-align: center;
+    color: #b1624b;
+    background: #faece5;
+    padding: 20px;
+    border-radius: 24px;
+    font-size: 0.85rem;
+  }
+
+  #close-hint {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(26,16,8,0.8);
+    color: #f5efe0;
+    font-size: 0.7rem;
+    padding: 5px 16px;
+    border-radius: 40px;
+    letter-spacing: 0.1em;
+    display: none;
+    z-index: 2000;
+    pointer-events: none;
+    backdrop-filter: blur(4px);
+  }
+  #close-hint.visible { display: block; }
+
+  #overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 500;
+    background: rgba(30,20,10,0.2);
+    backdrop-filter: blur(3px);
+  }
+  #overlay.visible { display: block; }
+
+  footer {
+    text-align: center;
+    padding: 20px;
+    color: #aaa090;
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    border-top: 1px solid var(--border);
+    margin-top: 20px;
+  }
+
+  .section-marker {
+    grid-column: 1 / -1;
+    text-align: center;
+    font-size: 0.68rem;
+    color: var(--gold);
+    letter-spacing: 0.3em;
+    padding: 8px 0 2px;
+    border-top: 1px dashed var(--border);
+    margin-top: 6px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="settings-gear" id="settingsBtn" title="设置 DeepSeek API Key">⚙️</div>
+  <h1>千字表</h1>
+  <p>✦ 点击汉字 · DeepSeek 实时生成词组 · 英译 · 地道例句 ✦</p>
+</header>
+
+<div class="grid-wrapper">
+  <div id="char-grid"></div>
+</div>
+
+<div id="overlay"></div>
+
+<div id="popup">
+  <div id="popup-char"></div>
+  <div style="text-align: center; flex-shrink: 0;"><span class="popup-sub">✧ 智慧词库 · 动态生成 ✧</span></div>
+  <div class="words-scroll-area" id="popup-words-container">
+    <div id="popup-loading" style="display:none">
+      <div class="spinner"></div> 正在召唤 DeepSeek 精灵，为你创作词组与例句...
+    </div>
+    <div id="vocab-list"></div>
+  </div>
+</div>
+
+<div id="close-hint">✕ 点击外部 或 ESC 关闭</div>
+
+<!-- API 设置模态窗 -->
+<div id="apiModal" class="modal">
+  <div class="modal-card">
+    <h3>🔑 DeepSeek 配置</h3>
+    <p>请输入你的 DeepSeek API Key (每次点击都会实时生成新内容)</p>
+    <input type="password" id="apiKeyInput" class="api-input" placeholder="sk-xxxxxxxxxxxxxxxxxxxx" autocomplete="off">
+    <div class="modal-buttons">
+      <button class="btn-save" id="saveApiBtn">保存并生效</button>
+      <button class="btn-cancel" id="cancelModalBtn">取消</button>
+    </div>
+    <div class="key-status" id="apiStatusMsg"></div>
+  </div>
+</div>
+
+<footer>📖 灵动研习 · 每个汉字均实时通过 DeepSeek API 生成 • 词组紧邻汉字 • 滚动顺畅</footer>
+
+<script>
+// ======================= 配置与全局变量 =======================
+let currentApiKey = localStorage.getItem('deepseek_key') || '';
+let activeCell = null;
+let isFetching = false;       
+let currentRequestChar = '';  
+const popup = document.getElementById('popup');
+const popupChar = document.getElementById('popup-char');
+const vocabListDiv = document.getElementById('vocab-list');
+const popupLoadingDiv = document.getElementById('popup-loading');
+const overlay = document.getElementById('overlay');
+const closeHint = document.getElementById('close-hint');
+
+const modal = document.getElementById('apiModal');
+const settingsBtn = document.getElementById('settingsBtn');
+const saveApiBtn = document.getElementById('saveApiBtn');
+const cancelModalBtn = document.getElementById('cancelModalBtn');
+const apiKeyInput = document.getElementById('apiKeyInput');
+const apiStatusMsg = document.getElementById('apiStatusMsg');
+
+const CHARS = '的一是在不了有和人这中大为上个国我以要他时来用们生到作地于出就分对成会可主发年动同工也能下过子说产种面而方后多定行学法所民得经十三之进着等部度家电力里如水化高自二理起小物现实加量都两体制机当使点从业本去把性好应开它合还因由其些然前外天政四日那社义事平形相全表间样与关各重新线内数正心反你明看原又么文长北代际联无带军道想路口手向门命给名规问但号直打论才设资简此处系员语告组织节土解务印象装备注记描述图片标题容版权保留转载请谢支持式邮件址网站首页品服闻讯帮助户登录册商城购车结算订单管积兑换优惠券活专区排榜热推荐精特价限折扣清仓甩卖买送满减包场享受低销超值抢秒杀团拼省钱攻略比评测横深验试真箱晒秀拍效果展示细模穿搭配风格尚潮流复古典约百显瘦气质雅帅爱萌独创意计师牌旗舰店官授障假赔七退货运费险破损补先售完善位五星强烈建议入颜做料扎舒适戴感顺滑柔软亲肤透速干抗皱免烫洗涤便养耐久色泽均匀褪球变礼皆宜老少男女通季常休闲旅勤聚婚朋友辈晚领导客伙伴互利共赢携美未望愿景观企队招募岗职责薪待遇福培训晋升空盟渠拓市广传播营策划执落跟馈总盘迭提改突越竞争占据份额获取存盈增扩张融并整态布局战顶层统思维视野境界次角框架逻辑构程范准指考核估析报炼华键难疑盲误陷阱挑术协沟调源率目绩激励酬级汇放信任尊情智绪压释健康身饮食睡眠息律习惯控立判断批造散归纳演绎践证修循环终步蜕瓶颈跨碍克困决梦极读写听唱跑跳游泳篮足乒乓羽毛瑜伽武太拳功冥禅佛儒教历史俗庆春元旦端午秋阳冬至除夕祭扫墓踏青赏月燃烟火爆竹红拜走访圆饭宴佳肴吃早茶夜宵烧烤串锅麻辣冷鱼酸菜煮肉宫鸡丁豆腐糖醋脊东坡梅笋腊肠咸臭皮蛋松花油条浆馒饺混沌米粥汤粉河螺蛳桥炒扬州烩盖浇拌粽饼糕奶吐司治汉堡披萨沙拉凉黄瓜番茄韭白萝卜菠芹藕苦南丝芽叶魔芋海紫木耳蘑菇香金针杏鲍露荪猪肚蹄骨腿翅鸭脖鹅掌牛腩羊鲜虾蟹贝扇蛤蜊蚌蚝蛏鱿章墨鲳鲫草鲢鳙鲤鳊昌桂鲈石斑鳟枪吞剑鲨鳗泥鳅鳝龙基围螃甲乙丙戊己庚辛壬癸丑寅卯辰巳申酉戌亥鼠虎兔蛇马猴狗西夏雨雷雪霜雾霞彩虹云树林山湖洋泉井岩崖峰谷盆森漠农田庄稼粮棉桑蚕绸瓷器铜铁钢银玉玛瑙翡翠琥珀珊瑚珍珠壳牙犀熊猫豹狮鹿狼狐鸟龟凤麒麟鹤雕鹰燕雀鸽鹦鹉孔蚂蚁蜜蜂蝴蝶蜻蜓蟋蟀萤虫蝉蜗螳螂蚯蚓壁蜥蜴蛙蟾蜍鳄乌鲸豚胆参锦鲶';
+
+let charsList = [...new Set(CHARS.split('').filter(c => c.trim()))];
+if (charsList.length > 1000) charsList = charsList.slice(0, 1000);
+const chars = charsList;
+
+const grid = document.getElementById('char-grid');
+function buildGrid() {
+  chars.forEach((ch, i) => {
+    if (i > 0 && i % 100 === 0) {
+      const marker = document.createElement('div');
+      marker.className = 'section-marker';
+      marker.textContent = `第 ${i+1}–${Math.min(i+100, chars.length)} 字`;
+      grid.appendChild(marker);
+    }
+    const cell = document.createElement('div');
+    cell.className = 'char-cell';
+    cell.textContent = ch;
+    cell.dataset.char = ch;
+    cell.addEventListener('click', (e) => {
+      e.stopPropagation();
+      openPopup(ch, cell);
+    });
+    grid.appendChild(cell);
+  });
+}
+buildGrid();
+
+async function fetchRealTimeWords(ch, apiKey) {
+  const systemPrompt = `你是资深对外汉语专家，专门帮外国学生掌握地道中文。对于用户提供的汉字，生成5个最常用的包含该汉字的词语（2~4字）。每个词语需附带：
+- 英文释义（准确且生活化）
+- 中文例句（自然口语或常用书面语，体现真实场景）
+- 英文翻译例句（与中文对应，流畅自然）
+输出格式必须为严格的JSON数组，例如：
+[{"word":"词语","meaning":"English meaning","example":"中文例句。","example_en":"English example sentence."}]
+不要任何额外解释、注意只用双引号，确保可被JSON.parse。例句生动、不机械。`;
+
+  const userMsg = `汉字：“${ch}”。请生成包含该字的5个常用词语以及对应的地道英文释义、双语例句。`;
+
+  const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${apiKey}`
+    },
+    body: JSON.stringify({
+      model: 'deepseek-chat',
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userMsg }
+      ],
+      temperature: 0.75,
+      max_tokens: 1400,
+      response_format: { type: "json_object" }
+    })
+  });
+
+  if (!response.ok) {
+    let errorDetail = `API错误 ${response.status}`;
+    if (response.status === 401) errorDetail = '无效的API Key，请检查密钥';
+    else if (response.status === 429) errorDetail = '请求频率过高，请稍后再试';
+    throw new Error(errorDetail);
+  }
+
+  const data = await response.json();
+  let content = data.choices?.[0]?.message?.content || '';
+  content = content.trim();
+  if (content.startsWith('```json')) content = content.slice(7);
+  else if (content.startsWith('```')) content = content.slice(3);
+  if (content.endsWith('```')) content = content.slice(0, -3);
+  content = content.trim();
+
+  let parsed = JSON.parse(content);
+  if (!Array.isArray(parsed)) {
+    if (parsed.words && Array.isArray(parsed.words)) parsed = parsed.words;
+    else throw new Error('返回格式不是数组');
+  }
+  const valid = parsed.filter(item =>
+    item.word && typeof item.word === 'string' &&
+    item.meaning && typeof item.meaning === 'string' &&
+    item.example && typeof item.example === 'string' &&
+    item.example_en && typeof item.example_en === 'string'
+  ).slice(0, 6);
+  
+  if (valid.length === 0) throw new Error('有效词语不足');
+  return valid;
+}
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return str.replace(/[&<>]/g, function(m) {
+    if (m === '&') return '&amp;';
+    if (m === '<') return '&lt;';
+    if (m === '>') return '&gt;';
+    return m;
+  });
+}
+
+function renderWordCards(wordItems, targetChar) {
+  if (!wordItems || wordItems.length === 0) {
+    vocabListDiv.innerHTML = `<div class="error-placeholder">✨ 没生成到词语，请检查网络或重试点击汉字。</div>`;
+    return;
+  }
+  const fragment = document.createDocumentFragment();
+  wordItems.forEach(item => {
+    const word = item.word;
+    const meaning = item.meaning;
+    const example = item.example;
+    const exampleEn = item.example_en;
+    const highlightedWord = word.split('').map(c => c === targetChar ? `<span class="highlight">${escapeHtml(c)}</span>` : escapeHtml(c)).join('');
+    
+    const card = document.createElement('div');
+    card.className = 'word-card';
+    card.innerHTML = `
+      <div class="word-header">
+        <span class="word-text">${highlightedWord}</span>
+        <span class="word-meaning">${escapeHtml(meaning)}</span>
+      </div>
+      <div class="example-section">
+        <div class="example-cn">📖 ${escapeHtml(example)}</div>
+        <div class="example-en">🔤 ${escapeHtml(exampleEn)}</div>
+      </div>
+    `;
+    fragment.appendChild(card);
+  });
+  vocabListDiv.innerHTML = '';
+  vocabListDiv.appendChild(fragment);
+}
+
+async function openPopup(ch, cell) {
+  if (isFetching && currentRequestChar === ch) return;
+  if (!currentApiKey || currentApiKey.trim() === '') {
+    alert('请先点击右上角⚙️设置 DeepSeek API Key，再进行学习');
+    return;
+  }
+
+  if (activeCell) activeCell.classList.remove('active');
+  activeCell = cell;
+  cell.classList.add('active');
+
+  popupChar.textContent = ch;
+  vocabListDiv.innerHTML = '';
+  popupLoadingDiv.style.display = 'flex';
+  popup.classList.add('visible');
+  overlay.classList.add('visible');
+  closeHint.classList.add('visible');
+
+  isFetching = true;
+  currentRequestChar = ch;
+  try {
+    const wordData = await fetchRealTimeWords(ch, currentApiKey);
+    popupLoadingDiv.style.display = 'none';
+    renderWordCards(wordData, ch);
+  } catch (err) {
+    popupLoadingDiv.style.display = 'none';
+    let errorMsg = err.message || '生成失败，请重试。';
+    if (errorMsg.includes('API Key')) errorMsg = 'DeepSeek API Key 无效或未设置，请重新配置。';
+    vocabListDiv.innerHTML = `<div class="error-placeholder">⚠️ ${escapeHtml(errorMsg)}<br>💡 点击右上角齿轮重新设置有效API Key</div>`;
+  } finally {
+    isFetching = false;
+    currentRequestChar = '';
+  }
+}
+
+function closePopup() {
+  popup.classList.remove('visible');
+  overlay.classList.remove('visible');
+  closeHint.classList.remove('visible');
+  if (activeCell) {
+    activeCell.classList.remove('active');
+    activeCell = null;
+  }
+}
+overlay.addEventListener('click', closePopup);
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closePopup(); });
+
+// ======================= 设置面板逻辑 =======================
+function showModal() {
+  apiKeyInput.value = currentApiKey || '';
+  apiStatusMsg.innerText = currentApiKey ? '✅ 已保存密钥 (隐藏显示)' : '⚠️ 未设置密钥，请填入DeepSeek Key';
+  modal.classList.add('active');
+}
+function hideModal() {
+  modal.classList.remove('active');
+}
+function saveApiKey() {
+  const newKey = apiKeyInput.value.trim();
+  if (newKey === '') {
+    apiStatusMsg.innerText = '❌ 密钥不能为空，请输入有效的 DeepSeek API Key';
+    return;
+  }
+  currentApiKey = newKey;
+  localStorage.setItem('deepseek_key', newKey);
+  apiStatusMsg.innerText = '✅ 密钥已保存！现在可以点击汉字学习啦～';
+  setTimeout(() => {
+    if (modal.classList.contains('active')) hideModal();
+  }, 800);
+}
+settingsBtn.addEventListener('click', showModal);
+saveApiBtn.addEventListener('click', saveApiKey);
+cancelModalBtn.addEventListener('click', hideModal);
+modal.addEventListener('click', (e) => {
+  if (e.target === modal) hideModal();
+});
+
+if (currentApiKey) {
+  console.log('DeepSeek API 已就绪');
+} else {
+  setTimeout(() => {
+    if (!currentApiKey && !modal.classList.contains('active')) {
+      apiStatusMsg.innerText = '未检测到API Key，请点击齿轮设置';
+    }
+  }, 500);
+}
+</script>
+</body>
+</html>
